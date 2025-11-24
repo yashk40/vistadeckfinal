@@ -31,28 +31,28 @@ const App: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { features } = useSettings();
-  
+
   // Offline Caching Prompt State
   const [cachingStatus, setCachingStatus] = useState<string | null>(null);
 
   // Handle Hash Navigation and Feature Flag Redirection
   useEffect(() => {
-      const handleHash = () => {
-          const hash = window.location.hash.substring(1) as ViewState;
-          // Redirect if feature is disabled
-          if (hash === 'store' && !features.enableStore) return setCurrentView('home');
-          if (hash === 'portfolio' && !features.enablePortfolio) return setCurrentView('home');
-          if (hash === 'magazine' && !features.enableBlog) return setCurrentView('home');
-          if (hash === 'expo' && !features.enableExpo) return setCurrentView('home');
+    const handleHash = () => {
+      const hash = window.location.hash.substring(1) as ViewState;
+      // Redirect if feature is disabled
+      if (hash === 'store' && !features.enableStore) return setCurrentView('home');
+      if (hash === 'portfolio' && !features.enablePortfolio) return setCurrentView('home');
+      if (hash === 'magazine' && !features.enableBlog) return setCurrentView('home');
+      if (hash === 'expo' && !features.enableExpo) return setCurrentView('home');
 
-          if (['home', 'store', 'portfolio', 'pricing', 'magazine', 'contact', 'expo'].includes(hash)) {
-              setCurrentView(hash);
-          }
-      };
-      
-      handleHash(); // Check on mount
-      window.addEventListener('hashchange', handleHash);
-      return () => window.removeEventListener('hashchange', handleHash);
+      if (['home', 'store', 'portfolio', 'pricing', 'magazine', 'contact', 'expo'].includes(hash)) {
+        setCurrentView(hash);
+      }
+    };
+
+    handleHash(); // Check on mount
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
   }, [features]);
 
   // Force Redirect if current view gets disabled at runtime
@@ -68,59 +68,59 @@ const App: React.FC = () => {
     document.title = `${CONFIG.company.name} | ${CONFIG.company.tagline}`;
 
     // Initialize Theme
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null;
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     const root = document.documentElement;
-    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) || (savedTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        root.classList.add('dark');
+    if (savedTheme === 'dark' || !savedTheme) {
+      root.classList.add('dark');
     } else {
-        root.classList.remove('dark');
+      root.classList.remove('dark');
     }
 
     // OFFLINE PRELOADING STRATEGY (Smart Feature-Aware)
     const initializeOfflineMode = async () => {
-        // 1. Preload Code Chunks (Views) - ONLY for enabled features
-        try {
-             const imports: Promise<any>[] = [
-                import('./components/Contact'),
-                import('./components/CartDrawer'),
-             ];
-             
-             if (features.enableStore) imports.push(import('./components/Store'));
-             if (features.enablePortfolio) imports.push(import('./components/Portfolio'));
-             if (features.enableBlog) imports.push(import('./components/Magazine'));
-             if (features.enableExpo) imports.push(import('./components/ExpoMode'));
-             imports.push(import('./components/Pricing')); // Usually lightweight
+      // 1. Preload Code Chunks (Views) - ONLY for enabled features
+      try {
+        const imports: Promise<any>[] = [
+          import('./components/Contact'),
+          import('./components/CartDrawer'),
+        ];
 
-             await Promise.all(imports);
-            console.log('✅ Offline Mode: Enabled Views Cached');
-        } catch (e) { console.warn('Offline View Cache Failed', e); }
+        if (features.enableStore) imports.push(import('./components/Store'));
+        if (features.enablePortfolio) imports.push(import('./components/Portfolio'));
+        if (features.enableBlog) imports.push(import('./components/Magazine'));
+        if (features.enableExpo) imports.push(import('./components/ExpoMode'));
+        imports.push(import('./components/Pricing')); // Usually lightweight
 
-        // 2. Preload Asset Data (Images) based on Config Sequence
-        // Using a small timeout to not block initial render
-        setTimeout(() => {
-            preloadAssetGroups(
-                OFFLINE_ASSET_GROUPS,
-                (label) => setCachingStatus(`Caching: ${label}`),
-                () => {
-                    setCachingStatus(null); // Hide prompt when done
-                    console.log('✅ Offline Mode: All assets cached');
-                }
-            );
-        }, 2000);
+        await Promise.all(imports);
+        console.log('✅ Offline Mode: Enabled Views Cached');
+      } catch (e) { console.warn('Offline View Cache Failed', e); }
+
+      // 2. Preload Asset Data (Images) based on Config Sequence
+      // Using a small timeout to not block initial render
+      setTimeout(() => {
+        preloadAssetGroups(
+          OFFLINE_ASSET_GROUPS,
+          (label) => setCachingStatus(`Caching: ${label}`),
+          () => {
+            setCachingStatus(null); // Hide prompt when done
+            console.log('✅ Offline Mode: All assets cached');
+          }
+        );
+      }, 2000);
     };
 
     if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(initializeOfflineMode);
+      (window as any).requestIdleCallback(initializeOfflineMode);
     } else {
-        setTimeout(initializeOfflineMode, 3000);
+      setTimeout(initializeOfflineMode, 3000);
     }
   }, [features]); // Re-run caching if features change
 
   // Navigation Handler with Transition for smoothness
   const handleNavigate = useCallback((view: ViewState) => {
     startTransition(() => {
-        setCurrentView(view);
-        window.scrollTo(0, 0);
+      setCurrentView(view);
+      window.scrollTo(0, 0);
     });
   }, []);
 
@@ -152,25 +152,25 @@ const App: React.FC = () => {
   const handleCheckout = useCallback((data: CheckoutData) => {
     const orderId = "ORD-" + Math.floor(Math.random() * 1000000).toString();
     const orderDetails = {
-        id: orderId,
-        timestamp: new Date().toISOString(),
-        items: cart,
-        customerContact: data.contactNumber,
-        notes: data.notes,
-        total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+      id: orderId,
+      timestamp: new Date().toISOString(),
+      items: cart,
+      customerContact: data.contactNumber,
+      notes: data.notes,
+      total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
     };
 
     console.group('📦 NEW ORDER RECEIVED');
     console.log('Sending to Dashboard API...', orderDetails);
     console.log('Sending Email to Store Owner...', {
-        to: CONFIG.contact.email,
-        subject: `New Order Enquiry ${orderId}`,
-        body: orderDetails
+      to: CONFIG.contact.email,
+      subject: `New Order Enquiry ${orderId}`,
+      body: orderDetails
     });
     console.groupEnd();
 
     alert(`Thank you! Your order enquiry #${orderId} has been successfully submitted.\n\nContact: ${data.contactNumber}\nNotes: "${data.notes}"\n\nWe will contact you shortly via email/phone to finalize the order.`);
-    
+
     setCart([]);
     setIsCartOpen(false);
   }, [cart]);
@@ -199,9 +199,9 @@ const App: React.FC = () => {
   // Special Render for Expo Mode (No Shell)
   if (currentView === 'expo' && features.enableExpo) {
     return (
-        <Suspense fallback={<LoadingScreen />}>
-            <ExpoMode onExit={() => handleNavigate('home')} />
-        </Suspense>
+      <Suspense fallback={<LoadingScreen />}>
+        <ExpoMode onExit={() => handleNavigate('home')} />
+      </Suspense>
     );
   }
 
@@ -213,40 +213,40 @@ const App: React.FC = () => {
       {/* Settings Modal */}
       {isSettingsOpen && <SettingsModal onClose={() => setIsSettingsOpen(false)} />}
 
-      <Header 
+      <Header
         currentView={currentView}
-        onNavigate={handleNavigate} 
-        cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)} 
-        onOpenCart={() => setIsCartOpen(true)} 
+        onNavigate={handleNavigate}
+        cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)}
+        onOpenCart={() => setIsCartOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
-      
+
       <Suspense fallback={null}>
-          <CartDrawer 
-            isOpen={isCartOpen} 
-            onClose={() => setIsCartOpen(false)} 
-            cart={cart}
-            updateQuantity={updateQuantity}
-            removeFromCart={removeFromCart}
-            onCheckout={handleCheckout}
-          />
+        <CartDrawer
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          cart={cart}
+          updateQuantity={updateQuantity}
+          removeFromCart={removeFromCart}
+          onCheckout={handleCheckout}
+        />
       </Suspense>
 
       <main>
         <Suspense fallback={<LoadingScreen />}>
-            {renderView()}
+          {renderView()}
         </Suspense>
       </main>
-      
+
       <Footer onNavigate={handleNavigate} />
       <BottomNav currentView={currentView} onNavigate={handleNavigate} />
-      
+
       {/* Floating WhatsApp */}
-      <a 
+      <a
         href={`https://wa.me/${CONFIG.contact.phoneRaw.replace('+', '')}?text=${encodeURIComponent(`Hi ${CONFIG.company.name}, I found your digital catalog and would like to know more.`)}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-24 right-4 md:bottom-8 md:right-8 bg-[#25D366] text-white p-3.5 rounded-full shadow-xl hover:scale-105 transition-transform z-50 flex items-center justify-center group" 
+        className="fixed bottom-24 right-4 md:bottom-8 md:right-8 bg-[#25D366] text-white p-3.5 rounded-full shadow-xl hover:scale-105 transition-transform z-50 flex items-center justify-center group"
         aria-label="Chat on WhatsApp"
       >
         <MessageCircleIcon className="h-7 w-7 fill-current" />
@@ -254,15 +254,15 @@ const App: React.FC = () => {
 
       {/* Offline Caching Prompt Toast */}
       {cachingStatus && (
-          <div className="fixed bottom-24 md:bottom-8 left-4 z-[60] animate-in slide-in-from-left-4 duration-500 pointer-events-none">
-              <div className="bg-slate-900/90 text-white px-4 py-3 rounded-lg shadow-lg backdrop-blur border border-slate-800 flex items-center gap-3">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-500 border-t-transparent"></div>
-                  <div>
-                      <p className="text-xs font-bold uppercase tracking-wider text-primary-400">Offline Ready</p>
-                      <p className="text-xs font-medium">{cachingStatus}...</p>
-                  </div>
-              </div>
+        <div className="fixed bottom-24 md:bottom-8 left-4 z-[60] animate-in slide-in-from-left-4 duration-500 pointer-events-none">
+          <div className="bg-slate-900/90 text-white px-4 py-3 rounded-lg shadow-lg backdrop-blur border border-slate-800 flex items-center gap-3">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-500 border-t-transparent"></div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-primary-400">Offline Ready</p>
+              <p className="text-xs font-medium">{cachingStatus}...</p>
+            </div>
           </div>
+        </div>
       )}
 
     </div>

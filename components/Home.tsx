@@ -364,7 +364,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, addToCart }) => {
                                     }
                                 `}
                              >
-                                <Icon className={`w-4 h-4 md:w-5 md:h-5 transition-colors ${isActive ? 'text-primary-400' : 'text-slate-400 group-hover:text-slate-600'}`} strokeWidth={isActive ? 2.5 : 2} />
+                                {/* <Icon className={`w-4 h-4 md:w-5 md:h-5 transition-colors ${isActive ? 'text-primary-400' : 'text-slate-400 group-hover:text-slate-600'}`} strokeWidth={isActive ? 2.5 : 2} /> */}
                                 <span className="text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap">{tab.label}</span>
                                 {tab.count !== null && (
                                     <span className={`
